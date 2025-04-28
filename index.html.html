@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>名片风格链接卡片生成器</title>
+    <style>
+        :root {
+            --card-bg: #ffffff;
+            --card-radius: 8px;
+            --card-width: 324px;
+            --card-height: 204px;
+            --primary-color: #07c160;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        
+        body {
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+        
+        .app {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        @media (min-width: 768px) {
+            .app {
+                flex-direction: row;
+            }
+            
+            .form-section, .preview-section {
+                flex: 1;
+            }
+        }
+        
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        input[type="text"], 
+        input[type="url"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #06ad56;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .btn-secondary {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e0e0e0;
+        }
+        
+        /* 卡片样式 - 修改为横屏名片样式 */
+        .wechat-card {
+            width: var(--card-width);
+            height: var(--card-height);
+            background: var(--card-bg);
+            border-radius: var(--card-radius);
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .card-image {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .card-content {
+            padding: 12px;
+            display: flex;
+            flex: 1;
+        }
+        
+        .avatar-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+        
+        .card-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: #333;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .card-desc {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .card-footer {
+            display: flex;
+            align-items: center;
+            padding-top: 10px;
+            border-top: 1px solid #f0f0f0;
+        }
+        
+        .avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .avatar.square {
+            border-radius: 4px;
+        }
+        
+        .username {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        /* 历史记录 */
+        .history-section {
+            margin-top: 30px;
+        }
+        
+        .history-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(324px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .history-item {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .history-item:hover {
+            transform: translateY(-3px);
+        }
+        
+        /* 文件上传样式 */
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-upload input {
+            opacity: 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .file-upload-label {
+            display: block;
+            padding: 10px;
+            border: 1px dashed #ddd;
+            border-radius: 4px;
+            text-align: center;
+            background: #f9f9f9;
+            cursor: pointer;
+        }
+        
+        .file-upload-label:hover {
+            background: #f0f0f0;
+        }
+        
+        .preview-image {
+            max-width: 100%;
+            max-height: 150px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .avatar-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .avatar-preview.square {
+            border-radius: 8px;
+        }
+        
+        /* 确保预览图片始终显示 */
+        #preview-image {
+            display: block !important;
+        }
+        
+        #preview-avatar {
+            display: block !important;
+        }
+        
+        /* 调整卡片高度滑块 */
+        #card-height-value {
+            display: inline-block;
+            width: 50px;
+            text-align: right;
+        }
+        
+        /* 分享按钮样式 */
+        .share-message {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .share-message.success {
+            background: #e6f7e6;
+            color: #2e7d32;
+        }
+        
+        .share-message.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        /* 分享选项模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        .modal-title {
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .share-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        
+        .share-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .share-option:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .share-option i {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .close-modal {
+            margin-top: 15px;
+            padding: 8px 15px;
+            background-color: #f0f0f0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>名片风格链接卡片生成器</h1>
+        
+        <div class="app">
+            <div class="form-section section">
+                <h2>卡片设置</h2>
+                
+                <div class="form-group">
+                    <label for="title">标题</label>
+                    <input type="text" id="title" placeholder="输入卡片标题">
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">描述</label>
+                    <textarea id="description" placeholder="输入卡片描述"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="url">链接地址</label>
+                    <input type="url" id="url" placeholder="https://example.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="image">封面图片</label>
+                    <div class="file-upload">
+                        <label class="file-upload-label" for="image-upload">点击上传图片</label>
+                        <input type="file" id="image-upload" accept="image/*">
+                        <img id="image-preview" class="preview-image" alt="封面预览">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="avatar">头像</label>
+                    <div class="file-upload">
+                        <label class="file-upload-label" for="avatar-upload">点击上传头像</label>
+                        <input type="file" id="avatar-upload" accept="image/*">
+                        <img id="avatar-preview" class="avatar-preview" alt="头像预览">
+                    </div>
+                    <div>
+                        <label>
+                            <input type="radio" name="avatar-style" value="circle" checked> 圆形
+                        </label>
+                        <label>
+                            <input type="radio" name="avatar-style" value="square"> 方形
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" placeholder="输入用户名">
+                </div>
+                
+                <h3 style="margin-top: 20px;">样式设置</h3>
+                
+                <div class="form-group">
+                    <label for="card-width">卡片宽度 (px)</label>
+                    <input type="range" id="card-width" min="250" max="400" value="324">
+                    <span id="card-width-value">324px</span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="card-height">卡片高度 (px)</label>
+                    <input type="range" id="card-height" min="150" max="300" value="204">
+                    <span id="card-height-value">204px</span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="card-radius">圆角大小 (px)</label>
+                    <input type="range" id="card-radius" min="0" max="20" value="8">
+                    <span id="card-radius-value">8px</span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="card-color">背景颜色</label>
+                    <input type="color" id="card-color" value="#ffffff">
+                </div>
+                
+                <div class="form-group">
+                    <label for="primary-color">主色调</label>
+                    <input type="color" id="primary-color" value="#07c160">
+                </div>
+                
+                <div class="btn-group">
+                    <button id="generate-btn">生成卡片</button>
+                    <button id="reset-btn" class="btn-secondary">重置</button>
+                </div>
+            </div>
+            
+            <div class="preview-section section">
+                <h2>预览</h2>
+                <div id="card-preview">
+                    <a href="#" class="wechat-card" id="preview-card-link" target="_blank">
+                        <img src="https://via.placeholder.com/324x120?text=封面图片" class="card-image" id="preview-image">
+                        <div class="card-content">
+                            <div class="avatar-container">
+                                <img src="https://via.placeholder.com/60x60?text=头像" class="avatar" id="preview-avatar">
+                            </div>
+                            <div class="card-info">
+                                <div class="card-title" id="preview-title">这里是卡片标题</div>
+                                <div class="card-desc" id="preview-desc">这里是卡片描述内容，会显示在标题下方</div>
+                                <div class="card-footer">
+                                    <div class="username" id="preview-username">用户名</div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                
+                <div class="btn-group" style="margin-top: 20px;">
+                    <button id="share-btn">分享卡片</button>
+                    <button id="copy-btn" class="btn-secondary">复制链接</button>
+                </div>
+                <div id="share-message" class="share-message"></div>
+            </div>
+        </div>
+        
+        <div class="history-section section">
+            <h2>历史记录</h2>
+            <div id="history-list" class="history-list"></div>
+        </div>
+    </div>
+
+    <!-- 分享选项模态框 -->
+    <div id="share-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">选择分享方式</div>
+            <div class="share-options">
+                <div class="share-option" id="share-web">
+                    <i class="fas fa-share-alt"></i>
+                    <span>系统分享</span>
+                </div>
+                <div class="share-option" id="share-whatsapp">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>WhatsApp</span>
+                </div>
+                <div class="share-option" id="share-facebook">
+                    <i class="fab fa-facebook"></i>
+                    <span>Facebook</span>
+                </div>
+                <div class="share-option" id="share-twitter">
+                    <i class="fab fa-twitter"></i>
+                    <span>Twitter</span>
+                </div>
+                <div class="share-option" id="share-linkedin">
+                    <i class="fab fa-linkedin"></i>
+                    <span>LinkedIn</span>
+                </div>
+                <div class="share-option" id="share-email">
+                    <i class="fas fa-envelope"></i>
+                    <span>电子邮件</span>
+                </div>
+            </div>
+            <button class="close-modal" id="close-modal">关闭</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取DOM元素
+            const titleInput = document.getElementById('title');
+            const descInput = document.getElementById('description');
+            const urlInput = document.getElementById('url');
+            const imageUpload = document.getElementById('image-upload');
+            const avatarUpload = document.getElementById('avatar-upload');
+            const usernameInput = document.getElementById('username');
+            const cardWidthInput = document.getElementById('card-width');
+            const cardHeightInput = document.getElementById('card-height');
+            const cardRadiusInput = document.getElementById('card-radius');
+            const cardColorInput = document.getElementById('card-color');
+            const primaryColorInput = document.getElementById('primary-color');
+            const avatarStyleInputs = document.querySelectorAll('input[name="avatar-style"]');
+            
+            const previewTitle = document.getElementById('preview-title');
+            const previewDesc = document.getElementById('preview-desc');
+            const previewImage = document.getElementById('preview-image');
+            const previewAvatar = document.getElementById('preview-avatar');
+            const previewUsername = document.getElementById('preview-username');
+            const previewCardLink = document.getElementById('preview-card-link');
+            const imagePreview = document.getElementById('image-preview');
+            const avatarPreview = document.getElementById('avatar-preview');
+            
+            const generateBtn = document.getElementById('generate-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const shareBtn = document.getElementById('share-btn');
+            const copyBtn = document.getElementById('copy-btn');
+            const shareMessage = document.getElementById('share-message');
+            const historyList = document.getElementById('history-list');
+            
+            const shareModal = document.getElementById('share-modal');
+            const closeModal = document.getElementById('close-modal');
+            const shareWeb = document.getElementById('share-web');
+            const shareWhatsApp = document.getElementById('share-whatsapp');
+            const shareFacebook = document.getElementById('share-facebook');
+            const shareTwitter = document.getElementById('share-twitter');
+            const shareLinkedIn = document.getElementById('share-linkedin');
+            const shareEmail = document.getElementById('share-email');
+            
+            const cardWidthValue = document.getElementById('card-width-value');
+            const cardHeightValue = document.getElementById('card-height-value');
+            const cardRadiusValue = document.getElementById('card-radius-value');
+            
+            // 初始化
+            loadHistory();
+            updatePreview();
+            
+            // 事件监听
+            titleInput.addEventListener('input', updatePreview);
+            descInput.addEventListener('input', updatePreview);
+            urlInput.addEventListener('input', updatePreview);
+            usernameInput.addEventListener('input', updatePreview);
+            cardWidthInput.addEventListener('input', updateCardWidth);
+            cardHeightInput.addEventListener('input', updateCardHeight);
+            cardRadiusInput.addEventListener('input', updateCardRadius);
+            cardColorInput.addEventListener('input', updateCardColor);
+            primaryColorInput.addEventListener('input', updatePrimaryColor);
+            
+            imageUpload.addEventListener('change', function(e) {
+                handleImageUpload(e, imagePreview, previewImage);
+            });
+            
+            avatarUpload.addEventListener('change', function(e) {
+                handleImageUpload(e, avatarPreview, previewAvatar);
+                updateAvatarStyle();
+            });
+            
+            avatarStyleInputs.forEach(input => {
+                input.addEventListener('change', updateAvatarStyle);
+            });
+            
+            generateBtn.addEventListener('click', generateCard);
+            resetBtn.addEventListener('click', resetForm);
+            shareBtn.addEventListener('click', showShareModal);
+            copyBtn.addEventListener('click', copyLink);
+            closeModal.addEventListener('click', hideShareModal);
+            
+            // 分享选项事件监听
+            shareWeb.addEventListener('click', shareViaWebAPI);
+            shareWhatsApp.addEventListener('click', () => shareViaSocial('whatsapp'));
+            shareFacebook.addEventListener('click', () => shareViaSocial('facebook'));
+            shareTwitter.addEventListener('click', () => shareViaSocial('twitter'));
+            shareLinkedIn.addEventListener('click', () => shareViaSocial('linkedin'));
+            shareEmail.addEventListener('click', shareViaEmail);
+            
+            // 更新卡片宽度
+            function updateCardWidth() {
+                const width = cardWidthInput.value;
+                document.documentElement.style.setProperty('--card-width', `${width}px`);
+                cardWidthValue.textContent = `${width}px`;
+            }
+            
+            // 更新卡片高度
+            function updateCardHeight() {
+                const height = cardHeightInput.value;
+                document.documentElement.style.setProperty('--card-height', `${height}px`);
+                cardHeightValue.textContent = `${height}px`;
+            }
+            
+            // 更新卡片圆角
+            function updateCardRadius() {
+                const radius = cardRadiusInput.value;
+                document.documentElement.style.setProperty('--card-radius', `${radius}px`);
+                cardRadiusValue.textContent = `${radius}px`;
+            }
+            
+            // 更新卡片背景色
+            function updateCardColor() {
+                const color = cardColorInput.value;
+                document.documentElement.style.setProperty('--card-bg', color);
+            }
+            
+            // 更新主色调
+            function updatePrimaryColor() {
+                const color = primaryColorInput.value;
+                document.documentElement.style.setProperty('--primary-color', color);
+                document.querySelector('h1').style.color = color;
+                document.querySelectorAll('button:not(.btn-secondary)').forEach(btn => {
+                    btn.style.backgroundColor = color;
+                });
+            }
+            
+            // 更新头像样式
+            function updateAvatarStyle() {
+                const style = document.querySelector('input[name="avatar-style"]:checked').value;
+                if (style === 'circle') {
+                    previewAvatar.classList.remove('square');
+                    avatarPreview.classList.remove('square');
+                } else {
+                    previewAvatar.classList.add('square');
+                    avatarPreview.classList.add('square');
+                }
+            }
+            
+            // 处理图片上传
+            function handleImageUpload(event, previewElement, targetElement) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewElement.src = e.target.result;
+                    previewElement.style.display = 'block';
+                    
+                    if (targetElement) {
+                        targetElement.src = e.target.result;
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            // 更新预览
+            function updatePreview() {
+                previewTitle.textContent = titleInput.value || '这里是卡片标题';
+                previewDesc.textContent = descInput.value || '这里是卡片描述内容，会显示在标题下方';
+                previewUsername.textContent = usernameInput.value || '用户名';
+                previewCardLink.href = urlInput.value || '#';
+            }
+            
+            // 生成卡片
+            function generateCard() {
+                // 获取所有值
+                const cardData = {
+                    title: titleInput.value,
+                    description: descInput.value,
+                    url: urlInput.value,
+                    image: imagePreview.src || previewImage.src,
+                    avatar: avatarPreview.src || previewAvatar.src,
+                    username: usernameInput.value,
+                    cardWidth: cardWidthInput.value,
+                    cardHeight: cardHeightInput.value,
+                    cardRadius: cardRadiusInput.value,
+                    cardColor: cardColorInput.value,
+                    primaryColor: primaryColorInput.value,
+                    avatarStyle: document.querySelector('input[name="avatar-style"]:checked').value,
+                    timestamp: new Date().getTime()
+                };
+                
+                // 保存到历史记录
+                saveToHistory(cardData);
+            }
+            
+            // 保存到历史记录
+            function saveToHistory(data) {
+                let history = JSON.parse(localStorage.getItem('wechatCardHistory') || '[]');
+                
+                // 添加到开头
+                history.unshift(data);
+                
+                // 只保留最近的10条
+                if (history.length > 10) {
+                    history = history.slice(0, 10);
+                }
+                
+                localStorage.setItem('wechatCardHistory', JSON.stringify(history));
+                loadHistory();
+            }
+            
+            // 加载历史记录
+            function loadHistory() {
+                const history = JSON.parse(localStorage.getItem('wechatCardHistory') || '[]');
+                historyList.innerHTML = '';
+                
+                if (history.length === 0) {
+                    historyList.innerHTML = '<p>暂无历史记录</p>';
+                    return;
+                }
+                
+                history.forEach((item, index) => {
+                    const avatarClass = item.avatarStyle === 'circle' ? '' : 'square';
+                    const imageUrl = item.image || 'https://via.placeholder.com/324x120?text=封面图片';
+                    const avatarUrl = item.avatar || 'https://via.placeholder.com/60x60?text=头像';
+                    
+                    const cardElement = document.createElement('div');
+                    cardElement.className = 'history-item';
+                    cardElement.innerHTML = `
+<a href="${item.url || '#'}" class="wechat-card" target="_blank" style="width: ${item.cardWidth}px; height: ${item.cardHeight}px; background: ${item.cardColor}; border-radius: ${item.cardRadius}px;">
+    <img src="${imageUrl}" class="card-image" style="height: 120px; object-fit: cover;">
+    <div class="card-content">
+        <div class="avatar-container">
+            <img src="${avatarUrl}" class="avatar ${avatarClass}" style="width: 60px; height: 60px; object-fit: cover;">
+        </div>
+        <div class="card-info">
+            <div class="card-title">${item.title || '无标题'}</div>
+            <div class="card-desc">${item.description || '无描述'}</div>
+            <div class="card-footer">
+                <div class="username">${item.username || '匿名'}</div>
+            </div>
+        </div>
+    </div>
+</a>
+                    `;
+                    
+                    cardElement.addEventListener('click', (e) => {
+                        if (e.target.tagName !== 'A') {
+                            loadHistoryItem(index);
+                        }
+                    });
+                    
+                    historyList.appendChild(cardElement);
+                });
+            }
+            
+            // 加载历史记录项
+            function loadHistoryItem(index) {
+                const history = JSON.parse(localStorage.getItem('wechatCardHistory') || '[]');
+                if (index >= history.length) return;
+                
+                const item = history[index];
+                
+                // 填充表单
+                titleInput.value = item.title || '';
+                descInput.value = item.description || '';
+                urlInput.value = item.url || '';
+                usernameInput.value = item.username || '';
+                cardWidthInput.value = item.cardWidth || 324;
+                cardHeightInput.value = item.cardHeight || 204;
+                cardRadiusInput.value = item.cardRadius || 8;
+                cardColorInput.value = item.cardColor || '#ffffff';
+                primaryColorInput.value = item.primaryColor || '#07c160';
+                
+                // 设置头像样式
+                document.querySelector(`input[name="avatar-style"][value="${item.avatarStyle || 'circle'}"]`).checked = true;
+                
+                // 更新预览图片
+                if (item.image) {
+                    imagePreview.src = item.image;
+                    imagePreview.style.display = 'block';
+                    previewImage.src = item.image;
+                } else {
+                    previewImage.src = 'https://via.placeholder.com/324x120?text=封面图片';
+                }
+                
+                if (item.avatar) {
+                    avatarPreview.src = item.avatar;
+                    avatarPreview.style.display = 'block';
+                    previewAvatar.src = item.avatar;
+                } else {
+                    previewAvatar.src = 'https://via.placeholder.com/60x60?text=头像';
+                }
+                
+                // 更新UI
+                updateCardWidth();
+                updateCardHeight();
+                updateCardRadius();
+                updateCardColor();
+                updatePrimaryColor();
+                updateAvatarStyle();
+                updatePreview();
+            }
+            
+            // 重置表单
+            function resetForm() {
+                titleInput.value = '';
+                descInput.value = '';
+                urlInput.value = '';
+                usernameInput.value = '';
+                cardWidthInput.value = 324;
+                cardHeightInput.value = 204;
+                cardRadiusInput.value = 8;
+                cardColorInput.value = '#ffffff';
+                primaryColorInput.value = '#07c160';
+                document.querySelector('input[name="avatar-style"][value="circle"]').checked = true;
+                
+                imagePreview.src = '';
+                imagePreview.style.display = 'none';
+                previewImage.src = 'https://via.placeholder.com/324x120?text=封面图片';
+                previewImage.style.display = 'block';
+                
+                avatarPreview.src = '';
+                avatarPreview.style.display = 'none';
+                previewAvatar.src = 'https://via.placeholder.com/60x60?text=头像';
+                previewAvatar.style.display = 'block';
+                
+                updateCardWidth();
+                updateCardHeight();
+                updateCardRadius();
+                updateCardColor();
+                updatePrimaryColor();
+                updateAvatarStyle();
+                updatePreview();
+            }
+            
+            // 显示分享模态框
+            function showShareModal() {
+                const url = urlInput.value;
+                if (!url) {
+                    showMessage('请先输入链接地址', 'error');
+                    return;
+                }
+                shareModal.style.display = 'flex';
+            }
+            
+            // 隐藏分享模态框
+            function hideShareModal() {
+                shareModal.style.display = 'none';
+            }
+            
+            // 通过Web Share API分享
+            function shareViaWebAPI() {
+                const url = urlInput.value;
+                const title = titleInput.value || '分享卡片';
+                const text = descInput.value || '查看这个有趣的链接';
+                
+                if (navigator.share) {
+                    navigator.share({
+                        title: title,
+                        text: text,
+                        url: url
+                    }).then(() => {
+                        showMessage('分享成功!', 'success');
+                        hideShareModal();
+                    }).catch(err => {
+                        if (err.name !== 'AbortError') {
+                            showMessage('分享失败: ' + err.message, 'error');
+                        }
+                    });
+                } else {
+                    showMessage('您的浏览器不支持系统分享功能', 'error');
+                }
+            }
+            
+            // 通过社交媒体分享
+            function shareViaSocial(platform) {
+                const url = encodeURIComponent(urlInput.value);
+                const title = encodeURIComponent(titleInput.value || '');
+                const text = encodeURIComponent(descInput.value || '');
+                
+                let shareUrl = '';
+                
+                switch (platform) {
+                    case 'whatsapp':
+                        shareUrl = `https://wa.me/?text=${text}%20${url}`;
+                        break;
+                    case 'facebook':
+                        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+                        break;
+                    case 'twitter':
+                        shareUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
+                        break;
+                    case 'linkedin':
+                        shareUrl = `https://www.linkedin.com/shareArticle?mini=true&url=${url}&title=${title}&summary=${text}`;
+                        break;
+                }
+                
+                window.open(shareUrl, '_blank');
+                hideShareModal();
+                showMessage('正在打开分享页面...', 'success');
+            }
+            
+            // 通过电子邮件分享
+            function shareViaEmail() {
+                const url = urlInput.value;
+                const title = encodeURIComponent(titleInput.value || '分享卡片');
+                const body = encodeURIComponent(`${descInput.value || '查看这个有趣的链接'}\n\n${url}`);
+                
+                window.location.href = `mailto:?subject=${title}&body=${body}`;
+                hideShareModal();
+            }
+            
+            // 复制链接
+            function copyLink() {
+                const url = urlInput.value;
+                if (!url) {
+                    showMessage('请先输入链接地址', 'error');
+                    return;
+                }
+                
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(url).then(() => {
+                        showMessage('链接已复制到剪贴板!', 'success');
+                    }).catch(err => {
+                        copyToClipboardFallback(url);
+                    });
+                } else {
+                    copyToClipboardFallback(url);
+                }
+            }
+            
+            // 显示消息
+            function showMessage(message, type) {
+                shareMessage.textContent = message;
+                shareMessage.style.display = 'block';
+                shareMessage.className = `share-message ${type}`;
+                
+                setTimeout(() => {
+                    shareMessage.style.display = 'none';
+                }, 3000);
+            }
+            
+            // 兼容性剪贴板复制
+            function copyToClipboardFallback(text) {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';  // 防止页面滚动
+                document.body.appendChild(textarea);
+                textarea.select();
+                
+                try {
+                    const successful = document.execCommand('copy');
+                    if (successful) {
+                        showMessage('链接已复制到剪贴板!', 'success');
+                    } else {
+                        showMessage('复制失败，请手动复制链接', 'error');
+                    }
+                } catch (err) {
+                    showMessage('复制失败，请手动复制链接', 'error');
+                }
+                
+                document.body.removeChild(textarea);
+            }
+        });
+    </script>
+</body>
+</html>
